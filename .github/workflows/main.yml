@@ -1,0 +1,72 @@
+name: Check changes in the Main branch
+
+on:
+    push:
+      branches: [ main ]
+    pull_request:
+      branches: [ main ]
+  
+jobs:  
+    build:
+      name: Build All
+      runs-on: ubuntu-latest
+      steps:
+  
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.15
+        id: go
+  
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+  
+      - name: Make all
+        run: make all
+    
+    coverage:
+        name: Coverage
+        runs-on: ubuntu-latest
+        
+        needs: build
+        steps:
+        - name: Set up Go 1.x
+          uses: actions/setup-go@v2
+          with:
+            go-version: ^1.15
+          id: go
+
+        - name: Check out code into the Go module directory
+          uses: actions/checkout@v2
+          
+        - name: Make coverage
+          run: make coverage 
+
+        - name: Test & publish code coverage
+          uses: paambaati/codeclimate-action@v2.7.4
+          env:
+            CC_TEST_REPORTER_ID: ${{ secrets.CodeClimateReporterID }}
+          with:
+            coverageLocations: ${{github.workspace}}/build/cover.out:gocov
+            prefix: github.com/${{github.repository}}/
+    golangci:
+        name: GoLangCI
+        runs-on: ubuntu-latest
+
+        needs: build
+        steps:
+            - name: Set up Go 1.x
+              uses: actions/setup-go@v2
+              with:
+                go-version: ^1.15
+              id: go
+
+            - name: Check out code into the Go module directory
+              uses: actions/checkout@v2
+            
+            - name: golangci-lint
+              uses: golangci/golangci-lint-action@v2
+              with:
+                version: v1.29
+      
+          
