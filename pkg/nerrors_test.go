@@ -45,8 +45,7 @@ var _ = ginkgo.Describe("Handler test on nerrors calls", func() {
 		})
 
 		ginkgo.It("Check if ExtendedError is an error", func() {
-			var err error
-			err = NewInternalError("message")
+			var err error = NewInternalError("message")
 			gomega.Expect(err).NotTo(gomega.BeNil())
 
 			errCheck := test()

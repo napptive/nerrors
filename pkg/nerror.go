@@ -115,7 +115,7 @@ func (ee *ExtendedError) ToGRPC() error {
 	return complexSt.Err()
 }
 
-// ToGRPC converts a GrpcError to an extended error
+// FromGRPC converts a GrpcError to an extended error
 func FromGRPC(err error) *ExtendedError {
 	status := status.Convert(err)
 	var stackTrace []string
@@ -137,10 +137,10 @@ func FromGRPC(err error) *ExtendedError {
 // FromError transforms a standard go error into an extended error
 func FromError(err error) *ExtendedError {
 
-	switch err.(type) {
-	case *ExtendedError:
-		return err.(*ExtendedError)
+	if e, ok := err.(*ExtendedError); ok {
+		return e
 	}
+
 	return &ExtendedError{
 		Code:       Unknown,
 		Msg:        err.Error(),
