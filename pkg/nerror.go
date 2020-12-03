@@ -26,6 +26,7 @@ func NewExtendedError(code ErrorCode, format string, a ...interface{}) *Extended
 		StackTrace: getStackTrace(),
 	}
 }
+
 // NewExtendedError From generic method to create an extended error from another caused by another one
 func NewExtendedErrorFrom(code ErrorCode, err error,
 	format string, a ...interface{}) *ExtendedError {
@@ -36,6 +37,7 @@ func NewExtendedErrorFrom(code ErrorCode, err error,
 		StackTrace: getStackTrace(),
 	}
 }
+
 // Error method to implement error interface
 func (ee *ExtendedError) Error() string {
 	return ee.String()
@@ -114,14 +116,34 @@ func (ee *ExtendedError) ToGRPC() error {
 }
 
 // ToGRPC converts a GrpcError to an extended error
-func ToGRPC(err error) *ExtendedError {
+func FromGRPC(err error) *ExtendedError {
 	status := status.Convert(err)
-
-	status.Details()
-
+	var stackTrace []string
+	stackTrace = nil
+	for _, detail := range status.Details() {
+		switch detail.(type){
+		case *errdetails.DebugInfo:
+			info := detail.(*errdetails.DebugInfo)
+			stackTrace = info.StackEntries
+		}
+	}
 	return &ExtendedError{
 		Code:       FromGRPCCode[status.Code()],
 		Msg:        status.Message(),
+		From:       nil,
+		StackTrace: stackTrace,
+	}
+}
+// FromError transforms a standard go error into an extended error
+func FromError(err error) *ExtendedError {
+
+	switch err.(type) {
+	case *ExtendedError:
+		return err.(*ExtendedError)
+	}
+	return &ExtendedError{
+		Code:       Unknown,
+		Msg:        err.Error(),
 		From:       nil,
 		StackTrace: nil,
 	}

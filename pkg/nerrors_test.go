@@ -54,20 +54,74 @@ var _ = ginkgo.Describe("Handler test on nerrors calls", func() {
 			gomega.Expect(errCheck.Error()).NotTo(gomega.BeEmpty())
 		})
 	})
+	// ToGrpc
 	ginkgo.Context("checking conversions to GRPC", func() {
-		ginkgo.It("can convert to GRPC error", func(){
+		ginkgo.It("can convert to GRPC error", func() {
 			err := NewInternalError("internal error")
 			grpcError := err.ToGRPC()
 			gomega.Expect(grpcError).NotTo(gomega.BeNil())
 		})
-		ginkgo.It("can convert a complex error to GRPC error", func(){
+		ginkgo.It("can convert a complex error to GRPC error", func() {
 			common := status.Errorf(codes.Aborted, "new error")
-			err := NewInternalErrorFrom(common,"internal error")
+			err := NewInternalErrorFrom(common, "internal error")
 			grpcError := err.ToGRPC()
 			gomega.Expect(grpcError).NotTo(gomega.BeNil())
+		})
+		ginkgo.It("can convert a Extended error to GRPC error and the result to error again", func() {
+			err := NewInternalError("internal error")
+			grpcError := err.ToGRPC()
+			gomega.Expect(grpcError).NotTo(gomega.BeNil())
+
+			converted := FromGRPC(grpcError)
+			gomega.Expect(converted).ShouldNot(gomega.BeNil())
+
+			gomega.Expect(err).Should(gomega.Equal(converted))
+
+		})
+	})
+	// FromGrpc
+	ginkgo.Context("checking conversions from GRPC", func() {
+		ginkgo.It("can convert from GRPC", func() {
+			err := status.Error(codes.NotFound, "id was not found")
+			extended := FromGRPC(err)
+			gomega.Expect(extended.Code).Should(gomega.Equal(NotFound))
+			gomega.Expect(extended.Msg).ShouldNot(gomega.BeEmpty())
+			gomega.Expect(extended.From).Should(gomega.BeNil())
+			gomega.Expect(extended.StackTrace).Should(gomega.BeNil())
+		})
+		ginkgo.It("can convert from GRPC and to grpc again", func() {
+			err := status.Error(codes.NotFound, "id was not found")
+			extended := FromGRPC(err)
+			gomega.Expect(extended.Code).Should(gomega.Equal(NotFound))
+
+			grpcError := extended.ToGRPC()
+			gomega.Expect(grpcError).ShouldNot(gomega.BeNil())
+			gomega.Expect(grpcError.Error()).Should(gomega.Equal(err.Error()))
+
+		})
+	})
+	// FromError
+	ginkgo.Context("checking conversions from standard error", func() {
+		ginkgo.It("Extended error can be converted to Extended error", func() {
+			extended := test() // test returns an ExtendedError as error
+			converted := FromError(extended)
+			gomega.Expect(converted).Should(gomega.Equal(extended))
+		})
+		ginkgo.It("Extended error can be converted to Extended error", func() {
+			parent := test() // test returns an ExtendedError as error
+			extended := NewNotFoundErrorFrom(parent, "not found error")
+			converted := FromError(extended)
+			gomega.Expect(converted).Should(gomega.Equal(extended))
+		})
+		ginkgo.It("error can be converted to Extended error", func() {
+			standard := fmt.Errorf("standard error")
+			converted := FromError(standard)
+			gomega.Expect(converted).ShouldNot(gomega.Equal(standard))
+			gomega.Expect(converted.StackTrace).Should(gomega.BeNil())
+			gomega.Expect(converted.From).Should(gomega.BeNil())
 		})
 	})
 })
 
-// ToGrpc FromGrpc
+
 
