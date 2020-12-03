@@ -10,29 +10,33 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// ExtendedError with an extended golang error
 type ExtendedError struct {
-	Code       ErrorCode
-	Msg        string
-	From       error
-	StackTrace []string
+	Code       ErrorCode // Code with the type of the error (compatible with GRPC)
+	Msg        string    // Error Msg
+	From       error     // Parent error
+	StackTrace []string  // Stack trace related to where the error happened in the code base
 }
 
+// NewExtendedError generic method to create an extended error
 func NewExtendedError(code ErrorCode, format string, a ...interface{}) *ExtendedError {
 	return &ExtendedError{
 		Code:       code,
 		Msg:        formatMsg(format, a...),
-		StackTrace: GetStackTrace(),
+		StackTrace: getStackTrace(),
 	}
 }
+// NewExtendedError From generic method to create an extended error from another caused by another one
 func NewExtendedErrorFrom(code ErrorCode, err error,
 	format string, a ...interface{}) *ExtendedError {
 	return &ExtendedError{
 		Code:       code,
 		Msg:        formatMsg(format, a...),
 		From:       err,
-		StackTrace: GetStackTrace(),
+		StackTrace: getStackTrace(),
 	}
 }
+// Error method to implement error interface
 func (ee *ExtendedError) Error() string {
 	return ee.String()
 }
@@ -49,10 +53,12 @@ func (ee *ExtendedError) ShortString() string {
 	return fmt.Sprintf("[%s] %s", ee.Code.String(), ee.Msg)
 }
 
+// Unwrap method to implement Wrapper interface (provides context around another error)
 func (ee *ExtendedError) Unwrap() error {
 	return ee.From
 }
 
+// StackTraceToString loops through error chain showing stack trace
 func (ee *ExtendedError) StackTraceToString() string {
 	if ee == nil {
 		return ""
@@ -71,7 +77,8 @@ func (ee *ExtendedError) StackTraceToString() string {
 
 }
 
-func GetStackTrace() []string {
+// getStackTrace get the stack trace when an error occurs
+func getStackTrace() []string {
 	buf := make([]uintptr, 32)
 	callers := runtime.Callers(2, buf)
 	stackTrace := make([]string, callers)
@@ -84,6 +91,7 @@ func GetStackTrace() []string {
 }
 
 // ---------------
+// ToGRPC converts an extended error to a GrpcError
 func (ee *ExtendedError) ToGRPC() error {
 	code, exists := ToGRPCCode[ee.Code]
 	if !exists {
@@ -105,7 +113,8 @@ func (ee *ExtendedError) ToGRPC() error {
 	return complexSt.Err()
 }
 
-func FromGRPC(err error) *ExtendedError {
+// ToGRPC converts a GrpcError to an extended error
+func ToGRPC(err error) *ExtendedError {
 	status := status.Convert(err)
 
 	status.Details()
