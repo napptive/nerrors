@@ -121,9 +121,8 @@ func FromGRPC(err error) *ExtendedError {
 	var stackTrace []string
 	stackTrace = nil
 	for _, detail := range status.Details() {
-		switch detail.(type){
-		case *errdetails.DebugInfo:
-			info := detail.(*errdetails.DebugInfo)
+		if e, ok := detail.(*errdetails.DebugInfo); ok {
+			info := e
 			stackTrace = info.StackEntries
 		}
 	}
