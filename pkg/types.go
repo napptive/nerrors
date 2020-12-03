@@ -6,24 +6,26 @@ import (
 
 type ErrorCode int
 
+// https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
+// ErrorCode compatible with gRPC codes
 const (
-	OK ErrorCode = iota
-	Canceled
-	Unknown
-	InvalidArgument
-	DeadlineExceeded
-	NotFound
-	AlreadyExists
-	PermissionDenied
-	ResourceExhausted
-	FailedPrecondition
-	Aborted
-	OutOfRange
-	Unimplemented
-	Internal
-	Unavailable
-	DataLoss
-	Unauthenticated
+	OK                 ErrorCode = iota // Not an error
+	Canceled                            // The operation was cancelled
+	Unknown                             // Unknown error
+	InvalidArgument                     // invalid argument
+	DeadlineExceeded                    // The deadline expired before the operation could complete.
+	NotFound                            // Some requested entity was not found.
+	AlreadyExists                       // The entity to create already exists.
+	PermissionDenied                    // The caller does not have permission to execute the specified operation
+	ResourceExhausted                   // Some resource has been exhausted
+	FailedPrecondition                  // The system is not in a state required for the operation's execution.
+	Aborted                             // Aborted
+	OutOfRange                          // The operation was attempted past the valid range.
+	Unimplemented                       // The operation is not implemented or is not supported
+	Internal                            // Internal error
+	Unavailable                         // Currently unavailable
+	DataLoss                            // Unrecoverable data loss or corruption
+	Unauthenticated                     // The request does not have valid authentication credentials for the operation
 )
 
 func (ec ErrorCode) String() string {
@@ -31,48 +33,6 @@ func (ec ErrorCode) String() string {
 		"NotFound", "AlreadyExists", "PermissionDenied", "ResourceExhausted",
 		"FailedPrecondition", "Aborted", "OutOfRange", "Unimplemented", "Internal",
 		"Unavailable", "DataLoss", "Unauthenticated"}[ec]
-}
-
-func (ec ErrorCode) String2() string {
-	switch ec {
-	case OK:
-		return "OK"
-	case Canceled:
-		return "Canceled"
-	case Unknown:
-		return "Unknown"
-	case InvalidArgument:
-		return "InvalidArgument"
-	case DeadlineExceeded:
-		return "DeadlineExceeded"
-	case NotFound:
-		return "NotFound"
-	case AlreadyExists:
-		return "AlreadyExists"
-	case PermissionDenied:
-		return "PermissionDenied"
-	case ResourceExhausted:
-		return "ResourceExhausted"
-	case FailedPrecondition:
-		return "FailedPrecondition"
-	case Aborted:
-		return "Aborted"
-	case OutOfRange:
-		return "OutOfRange"
-	case Unimplemented:
-		return "Unimplemented"
-	case Internal:
-		return "Internal"
-	case Unavailable:
-		return "Unavailable"
-	case DataLoss:
-		return "DataLoss"
-	case Unauthenticated:
-		return "Unauthenticated"
-	default:
-		return "Invalid Code"
-	}
-	return ""
 }
 
 var ToGRPCCode = map[ErrorCode]codes.Code{

@@ -12,7 +12,7 @@ import (
 
 func TestNerror(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "Shopping Cart Suite")
+	ginkgo.RunSpecs(t, "Nerror Suite")
 }
 
 // function to test if ExtendedError satisfy the error interface
