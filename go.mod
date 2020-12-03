@@ -1,4 +1,4 @@
-module github.com/carmendelope/nerrors
+module github.com/napptive/nerrors
 
 go 1.15
 
