@@ -9,23 +9,40 @@ type ErrorCode int
 // https://github.com/grpc/grpc/blob/master/doc/statuscodes.md
 // ErrorCode compatible with gRPC codes
 const (
-	OK                 ErrorCode = iota // Not an error
-	Canceled                            // The operation was cancelled
-	Unknown                             // Unknown error
-	InvalidArgument                     // invalid argument
-	DeadlineExceeded                    // The deadline expired before the operation could complete.
-	NotFound                            // Some requested entity was not found.
-	AlreadyExists                       // The entity to create already exists.
-	PermissionDenied                    // The caller does not have permission to execute the specified operation
-	ResourceExhausted                   // Some resource has been exhausted
-	FailedPrecondition                  // The system is not in a state required for the operation's execution.
-	Aborted                             // Aborted
-	OutOfRange                          // The operation was attempted past the valid range.
-	Unimplemented                       // The operation is not implemented or is not supported
-	Internal                            // Internal error
-	Unavailable                         // Currently unavailable
-	DataLoss                            // Unrecoverable data loss or corruption
-	Unauthenticated                     // The request does not have valid authentication credentials for the operation
+	// Ok indicates that this is not an error. This value is useful as enum use zero to represent the first element, and that information may not be sent through gRPC.
+	OK                 ErrorCode = iota
+	// Canceled indicates an operation was canceled and will no longer be executed.
+	Canceled
+	// Unknown indicates that while an error happened, its type is not known.
+	Unknown
+	// InvalidArgument indicates an error was detected due to the use of an invalid argument (e.g., invalid value).
+	InvalidArgument
+	// DeadlineExceeded indicates that the deadline expired before the operation could complete.
+	DeadlineExceeded
+	// NotFound indicates that some information about the requested entity was not found.
+	NotFound
+	// AlreadyExists indicates that an operation failed to create an entity because it already exists.
+	AlreadyExists
+	// PermissionDenied indicates that the caller does not have permission to execute the specified operation.
+	PermissionDenied
+	// ResourceExhausted indicates that the requested resource has been exhaused (e.g., no more pages exists).
+	ResourceExhausted
+	// FailedPrecondition indicates that an operation failed to satisfy a required precondition for its execution (e.g., base namespace was not created).
+	FailedPrecondition
+	// Aborted indicates that an operation was aborted due to some triggering factor.
+	Aborted
+	// OutOfRange indicates that an operation tried to access an element past the valid range.
+	OutOfRange
+	// Unimplemented indicates that the requested operation while declared is not implemented.
+	Unimplemented
+	// Internal indicates that an internal error in some component or system prevented the operation to be executed or failed during its execution.
+	Internal
+	// Unavailable indicates that the requested entity or operation is not available at this point.
+	Unavailable
+	// DataLoss indicates that an error related to unrecoverable data loss or corruption has happened.
+	DataLoss
+	// Unauthenticated indicates that the request does not have valid authentication credentials for the operation.
+	Unauthenticated
 )
 
 func (ec ErrorCode) String() string {
