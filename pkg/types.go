@@ -10,7 +10,7 @@ type ErrorCode int
 // ErrorCode compatible with gRPC codes
 const (
 	// Ok indicates that this is not an error. This value is useful as enum use zero to represent the first element, and that information may not be sent through gRPC.
-	OK                 ErrorCode = iota
+	OK ErrorCode = iota
 	// Canceled indicates an operation was canceled and will no longer be executed.
 	Canceled
 	// Unknown indicates that while an error happened, its type is not known.
