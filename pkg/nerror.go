@@ -12,10 +12,14 @@ import (
 
 // ExtendedError with an extended golang error
 type ExtendedError struct {
-	Code       ErrorCode // Code with the type of the error (compatible with GRPC)
-	Msg        string    // Error Msg
-	From       error     // Parent error
-	StackTrace []string  // Stack trace related to where the error happened in the code base
+        // Code with the type of the error (compatible with GRPC)
+	Code       ErrorCode
+	// Msg with a textual description of the error.
+	Msg        string    
+	// From links with the parent error if any.
+	From       error
+	// StackTrace related to where the error happened in the code base.
+	StackTrace []string  
 }
 
 // NewExtendedError generic method to create an extended error
