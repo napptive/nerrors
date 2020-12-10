@@ -105,7 +105,7 @@ func (ee *ExtendedError) ToGRPC() error {
 		return ee
 	}
 
-	status := status.New(code, ee.Msg)
+	status := status.New(code, ee.Error())
 
 	complexSt, err := status.WithDetails(
 		&errdetails.DebugInfo{
