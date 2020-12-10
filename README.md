@@ -1,50 +1,38 @@
-# go-template
-Napptive golang template
+# nerrors
+Error library for Napptive projects. 
 
-The purpose of this project is to provide a common template to develop Golang microservices in Napptive.
+This library aims to extend the generic golang error library in order to contribute more information to the error.
+* __Stack trace__ related to where the error happened in the code base
+* __Type error__ compatible with GRPC
+* __Parent__ with information about the parent errors
 
-## Layout structure
+## Example of usage
 
-The layout structure is based on the default golang-template layout.
-
-https://github.com/golang-standards/project-layout
-
-## Usage
-
-A make file is provided with the following targets:
-
-* clean: Remove build files
-* test: Run the available tests
-* build: Build the files for your local environment
-* build-darwin: Build the files for MacOS
-* build-linux: Build the files for Linux
-* k8s: Generate the Kubernetes deployment files
-* docker-prep: Prepare the Dockerfile folder with all the extra files
-* docker-build: Build the Dockerfile locally
-* docker-push: Push the image to the selected repository. You must make login before to push the docker image.
-
----
-**Important**
-
-If you are developing with MacOS/Darwin, you must install gnu-sed.
-
+- Creating a new error
 ```
-brew install gnu-sed
+// extended error
+err := NewNotFoundError("unable to find the record")
+fmt.Println(err.StackTraceToString)
 ```
----
-
+- For a complex wrapping example:
+```
+// classic golang error
+common := status.Errorf(codes.Aborted, "new error")
+// extended error
+err := NewInternalErrorFrom(common,"internal error")
+fmt.Println(err.StackTraceToString)
+```
 ## Integration with Code Climate
 
-This template is integrated with the Code Climate service.
+This project is integrated with codeclimate
 
-[![Maintainability](https://api.codeclimate.com/v1/badges/d426ab46dd6c71fcb93b/maintainability)](https://codeclimate.com/repos/5f8e9d4ccdd59e0541004d1a/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d426ab46dd6c71fcb93b/test_coverage)](https://codeclimate.com/repos/5f8e9d4ccdd59e0541004d1a/test_coverage)
-
+[![Maintainability](https://api.codeclimate.com/v1/badges/d426ab46dd6c71fcb93b/maintainability)](https://codeclimate.com/repos/5fc8adcdd753d801b6015bf5/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d426ab46dd6c71fcb93b/test_coverage)](https://codeclimate.com/repos/5fc8adcdd753d801b6015bf5/test_coverage)
 
 ## Integration with Github Actions
 
-This template is integrated with GitHub Actions. You need to add the secret `CodeClimateRerporterID` in the repository settings.
+This project is integrated with GitHub 
 
-![Check changes in the Main branch](https://github.com/napptive/go-template/workflows/Check%20changes%20in%20the%20Main%20branch/badge.svg)
+![Check changes in the Main branch](https://github.com/napptive/nerrors/workflows/Check%20changes%20in%20the%20Main%20branch/badge.svg)
 
 ## License
 
