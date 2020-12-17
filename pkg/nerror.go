@@ -148,7 +148,7 @@ func FromError(err error) *ExtendedError {
 		Code:       Unknown,
 		Msg:        err.Error(),
 		From:       nil,
-		StackTrace: nil,
+		StackTrace: getStackTrace(),
 	}
 }
 

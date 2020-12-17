@@ -52,6 +52,13 @@ var _ = ginkgo.Describe("Handler test on nerrors calls", func() {
 			gomega.Expect(errCheck).NotTo(gomega.BeNil())
 			gomega.Expect(errCheck.Error()).NotTo(gomega.BeEmpty())
 		})
+
+		ginkgo.It("Check the error has StackTrace (FromError conversion)", func() {
+			msg := "unable to find the record"
+			err :=  FromError(fmt.Errorf(msg))
+			gomega.Expect(err).ShouldNot(gomega.BeNil())
+			gomega.Expect(err.StackTrace).ShouldNot(gomega.BeEmpty())
+		})
 	})
 	// ToGrpc
 	ginkgo.Context("checking conversions to GRPC", func() {
@@ -116,7 +123,7 @@ var _ = ginkgo.Describe("Handler test on nerrors calls", func() {
 			standard := fmt.Errorf("standard error")
 			converted := FromError(standard)
 			gomega.Expect(converted).ShouldNot(gomega.Equal(standard))
-			gomega.Expect(converted.StackTrace).Should(gomega.BeNil())
+			gomega.Expect(converted.StackTrace).ShouldNot(gomega.BeNil())
 			gomega.Expect(converted.From).Should(gomega.BeNil())
 		})
 	})
