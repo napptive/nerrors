@@ -13,7 +13,7 @@ import (
 // ExtendedError with an extended golang error
 type ExtendedError struct {
         // Code with the type of the error (compatible with GRPC)
-	Code       ErrorCode
+	Code ErrorCode
 	// Msg with a textual description of the error.
 	Msg        string    
 	// From links with the parent error if any.
