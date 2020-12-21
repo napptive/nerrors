@@ -2,6 +2,7 @@ package nerrors
 
 import (
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"reflect"
 	"runtime"
@@ -12,14 +13,14 @@ import (
 
 // ExtendedError with an extended golang error
 type ExtendedError struct {
-        // Code with the type of the error (compatible with GRPC)
+	// Code with the type of the error (compatible with GRPC)
 	Code ErrorCode
 	// Msg with a textual description of the error.
-	Msg        string    
+	Msg string
 	// From links with the parent error if any.
-	From       error
+	From error
 	// StackTrace related to where the error happened in the code base.
-	StackTrace []string  
+	StackTrace []string
 }
 
 // NewExtendedError generic method to create an extended error
@@ -96,7 +97,23 @@ func getStackTrace() []string {
 	return stackTrace
 }
 
-// ---------------
+// getDetails converts a Extended Message into a list of Proto Message
+// The detail is Code: ... - Msg: ...
+func (ee *ExtendedError) getDetails(list []proto.Message) []proto.Message {
+
+	debugInfo := &errdetails.DebugInfo{
+		StackEntries: ee.StackTrace,
+		Detail:       fmt.Sprintf("Code: %s - Msg: %s", ee.Code.String(), ee.Msg),
+	}
+	if ee.From == nil {
+		return append(list, debugInfo)
+	} else {
+		return append(FromError(ee.From).getDetails(list), debugInfo)
+	}
+}
+
+
+// TODO: in the next version, instead of use DebugInfo and compose a detail, we can implement our own protoiface.MessageV1
 // ToGRPC converts an extended error to a GrpcError
 func (ee *ExtendedError) ToGRPC() error {
 	code, exists := ToGRPCCode[ee.Code]
@@ -107,11 +124,11 @@ func (ee *ExtendedError) ToGRPC() error {
 
 	status := status.New(code, ee.Msg)
 
-	complexSt, err := status.WithDetails(
-		&errdetails.DebugInfo{
-			StackEntries: ee.StackTrace,
-			Detail:       ee.Error(),
-		})
+	// we create as many details as errors we have in the chain. This is the way to convert a GPRC to Extended Error again
+	details := make([]proto.Message, 0)
+	allDetails := ee.getDetails(details)
+	complexSt, err := status.WithDetails(allDetails...)
+
 	if err != nil {
 		fmt.Printf("Error converting error to GRPC: %s\n", err.Error())
 		return ee
@@ -122,21 +139,80 @@ func (ee *ExtendedError) ToGRPC() error {
 // FromGRPC converts a GrpcError to an extended error
 func FromGRPC(err error) *ExtendedError {
 	status := status.Convert(err)
-	var stackTrace []string
-	stackTrace = nil
-	for _, detail := range status.Details() {
-		if e, ok := detail.(*errdetails.DebugInfo); ok {
-			info := e
-			stackTrace = info.StackEntries
+	code := status.Code()
+
+	if len(status.Details()) == 0 {
+		return &ExtendedError{
+			Code:       FromGRPCCode[code],
+			Msg:        status.Message(),
+			From:       nil,
+			StackTrace: getStackTrace(),
 		}
 	}
-	return &ExtendedError{
-		Code:       FromGRPCCode[status.Code()],
-		Msg:        status.Message(),
-		From:       nil,
-		StackTrace: stackTrace,
-	}
+
+	extended := ExtendedErrorFromDetail(status.Details())
+	extended.Code = FromGRPCCode[code]
+
+	return extended
+
 }
+
+//
+// getCodeFromGRPCMsg try to get the error code and the message if the details has the format belong
+// Detail: fmt.Sprintf("Code: %s - Msg: %s", ee.Code.String(), ee.Msg),
+func getCodeFromGRPCMsg(msg string) (string, ErrorCode) {
+
+	var errCode ErrorCode
+	var message string
+	// if we recognize the msg as our conversion, we can get the error code and the message
+	if ind := strings.Index(msg, "Code: "); ind >= 0 {
+		if msgInd := strings.Index(msg, " - Msg:"); msgInd >= 0 {
+			code := msg[ind+6 : msgInd]
+			errCode = FromStringCode[code]
+
+			message = msg[msgInd+8:]
+			return message, errCode
+		}
+	}
+
+	return msg, Unknown
+}
+
+// ExtendedErrorFromDetail create an extended error from the details of the grpc error
+func ExtendedErrorFromDetail(details []interface{}) *ExtendedError {
+	if len(details) == 0 {
+		return nil
+	}
+
+	if len(details) == 1 {
+		if e, ok := details[len(details)-1].(*errdetails.DebugInfo); ok {
+			info := e
+			stackTrace := info.StackEntries
+			msg, code := getCodeFromGRPCMsg(info.Detail)
+			return &ExtendedError{
+				Msg:        msg,
+				Code:       code,
+				From:       nil,
+				StackTrace: stackTrace,
+			}
+		}
+	} else {
+		if e, ok := details[len(details)-1].(*errdetails.DebugInfo); ok {
+			info := e
+			stackTrace := info.StackEntries
+			msg, code := getCodeFromGRPCMsg(info.Detail)
+			return &ExtendedError{
+				Msg:        msg,
+				Code:       code,
+				From:       ExtendedErrorFromDetail(details[0 : len(details)-1]),
+				StackTrace: stackTrace,
+			}
+		}
+	}
+	return nil
+
+}
+
 // FromError transforms a standard go error into an extended error
 func FromError(err error) *ExtendedError {
 

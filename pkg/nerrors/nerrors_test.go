@@ -84,6 +84,40 @@ var _ = ginkgo.Describe("Handler test on nerrors calls", func() {
 			gomega.Expect(err).Should(gomega.Equal(converted))
 
 		})
+		ginkgo.It("can convert a complex Extended error to GRPC error and the result to error again", func() {
+			common := NewNotFoundError("not found")
+			err := NewInternalErrorFrom(common, "internal error")
+			grpcError := err.ToGRPC()
+			gomega.Expect(grpcError).NotTo(gomega.BeNil())
+
+			converted := FromGRPC(grpcError)
+			gomega.Expect(converted).ShouldNot(gomega.BeNil())
+
+			gomega.Expect(err).Should(gomega.Equal(converted))
+
+		})
+		ginkgo.It("can convert a complex Extended error to GRPC error and the result to error again", func() {
+			// internal - not found - fmt.Error
+			err := NewInternalErrorFrom(NewNotFoundErrorFrom(fmt.Errorf("Fmt error"), "not found"), "internal error")
+			grpcError := err.ToGRPC()
+			gomega.Expect(grpcError).NotTo(gomega.BeNil())
+
+			converted := FromGRPC(grpcError)
+			gomega.Expect(converted).ShouldNot(gomega.BeNil())
+
+			gomega.Expect(err.Code).Should(gomega.Equal(converted.Code))
+
+		})
+		ginkgo.It("can convert a simple error to grpc and convert into extended error again", func() {
+			// internal - not found - fmt.Error
+			err := fmt.Errorf("Fmt error")
+			grpcError := FromError(err).ToGRPC()
+			gomega.Expect(grpcError).NotTo(gomega.BeNil())
+
+			converted := FromGRPC(grpcError)
+			gomega.Expect(converted).ShouldNot(gomega.BeNil())
+
+		})
 	})
 	// FromGrpc
 	ginkgo.Context("checking conversions from GRPC", func() {
@@ -93,7 +127,8 @@ var _ = ginkgo.Describe("Handler test on nerrors calls", func() {
 			gomega.Expect(extended.Code).Should(gomega.Equal(NotFound))
 			gomega.Expect(extended.Msg).ShouldNot(gomega.BeEmpty())
 			gomega.Expect(extended.From).Should(gomega.BeNil())
-			gomega.Expect(extended.StackTrace).Should(gomega.BeNil())
+			// Extended Message ALWAYS have Stack Trace
+			gomega.Expect(extended.StackTrace).ShouldNot(gomega.BeNil())
 		})
 		ginkgo.It("can convert from GRPC and to grpc again", func() {
 			err := status.Error(codes.NotFound, "id was not found")
