@@ -52,6 +52,26 @@ func (ec ErrorCode) String() string {
 		"Unavailable", "DataLoss", "Unauthenticated"}[ec]
 }
 
+var FromStringCode = map [string]ErrorCode {
+		"OK":                 OK,
+		"Canceled":           Canceled,
+		"Unknown":            Unknown,
+		"InvalidArgument":    InvalidArgument,
+		"DeadlineExceeded":   DeadlineExceeded,
+		"NotFound":           NotFound,
+		"AlreadyExists":      AlreadyExists,
+		"PermissionDenied":   PermissionDenied,
+		"ResourceExhausted":  ResourceExhausted,
+		"FailedPrecondition": FailedPrecondition,
+		"Aborted":            Aborted,
+		"OutOfRange":         OutOfRange,
+		"Unimplemented":      Unimplemented,
+		"Internal":           Internal,
+		"Unavailable":        Unavailable,
+		"DataLoss":           DataLoss,
+		"Unauthenticated":    Unauthenticated,
+}
+
 var ToGRPCCode = map[ErrorCode]codes.Code{
 	OK:                 codes.OK,
 	Canceled:           codes.Canceled,
