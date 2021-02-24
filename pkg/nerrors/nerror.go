@@ -2,13 +2,15 @@ package nerrors
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
+
+	protoGit "github.com/golang/protobuf/proto"
+
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"reflect"
 	"runtime"
 	"strings"
-
-	"google.golang.org/grpc/status"
 )
 
 // ExtendedError with an extended golang error
@@ -122,12 +124,20 @@ func (ee *ExtendedError) ToGRPC() error {
 		return ee
 	}
 
-	status := status.New(code, ee.Msg)
+	st := status.New(code, ee.Msg)
 
 	// we create as many details as errors we have in the chain. This is the way to convert a GPRC to Extended Error again
 	details := make([]proto.Message, 0)
 	allDetails := ee.getDetails(details)
-	complexSt, err := status.WithDetails(allDetails...)
+
+	// withDetails receives protoiface.MessageV1 and getDetails returns protoreflect.ProtoMessage
+	converted := make ([]protoGit.Message, 0)
+	for _, detail := range allDetails {
+		converted = append(converted, protoGit.MessageV1(detail))
+	}
+
+	// complexSt, err := st.WithDetails(allDetails...)
+	complexSt, err := st.WithDetails(converted...)
 
 	if err != nil {
 		fmt.Printf("Error converting error to GRPC: %s\n", err.Error())
@@ -138,19 +148,19 @@ func (ee *ExtendedError) ToGRPC() error {
 
 // FromGRPC converts a GrpcError to an extended error
 func FromGRPC(err error) *ExtendedError {
-	status := status.Convert(err)
-	code := status.Code()
+	st := status.Convert(err)
+	code := st.Code()
 
-	if len(status.Details()) == 0 {
+	if len(st.Details()) == 0 {
 		return &ExtendedError{
 			Code:       FromGRPCCode[code],
-			Msg:        status.Message(),
+			Msg:        st.Message(),
 			From:       nil,
 			StackTrace: getStackTrace(),
 		}
 	}
 
-	extended := ExtendedErrorFromDetail(status.Details())
+	extended := ExtendedErrorFromDetail(st.Details())
 	extended.Code = FromGRPCCode[code]
 
 	return extended
