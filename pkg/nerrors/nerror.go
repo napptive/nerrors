@@ -131,12 +131,12 @@ func (ee *ExtendedError) ToGRPC() error {
 	allDetails := ee.getDetails(details)
 
 	// withDetails receives protoiface.MessageV1 and getDetails returns protoreflect.ProtoMessage
+	// we need a casting
 	converted := make ([]protoGit.Message, 0)
 	for _, detail := range allDetails {
 		converted = append(converted, protoGit.MessageV1(detail))
 	}
 
-	// complexSt, err := st.WithDetails(allDetails...)
 	complexSt, err := st.WithDetails(converted...)
 
 	if err != nil {
