@@ -2,12 +2,9 @@ package nerrors
 
 import (
 	"fmt"
+	"github.com/napptive/grpc-common-go"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
-
-	protoGit "github.com/golang/protobuf/proto"
-
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/protobuf/runtime/protoiface"
 	"reflect"
 	"runtime"
 	"strings"
@@ -101,9 +98,9 @@ func getStackTrace() []string {
 
 // getDetails converts a Extended Message into a list of Proto Message
 // The detail is Code: ... - Msg: ...
-func (ee *ExtendedError) getDetails(list []proto.Message) []proto.Message {
+func (ee *ExtendedError) getDetails(list []protoiface.MessageV1) []protoiface.MessageV1 {
 
-	debugInfo := &errdetails.DebugInfo{
+	debugInfo := &grpc_common_go.ErrorDetails{
 		StackEntries: ee.StackTrace,
 		Detail:       fmt.Sprintf("Code: %s - Msg: %s", ee.Code.String(), ee.Msg),
 	}
@@ -127,17 +124,10 @@ func (ee *ExtendedError) ToGRPC() error {
 	st := status.New(code, ee.Msg)
 
 	// we create as many details as errors we have in the chain. This is the way to convert a GPRC to Extended Error again
-	details := make([]proto.Message, 0)
+	details := make([]protoiface.MessageV1, 0)
 	allDetails := ee.getDetails(details)
 
-	// withDetails receives protoiface.MessageV1 and getDetails returns protoreflect.ProtoMessage
-	// we need a casting
-	converted := make ([]protoGit.Message, 0)
-	for _, detail := range allDetails {
-		converted = append(converted, protoGit.MessageV1(detail))
-	}
-
-	complexSt, err := st.WithDetails(converted...)
+	complexSt, err := st.WithDetails(allDetails...)
 
 	if err != nil {
 		fmt.Printf("Error converting error to GRPC: %s\n", err.Error())
@@ -195,7 +185,7 @@ func ExtendedErrorFromDetail(details []interface{}) *ExtendedError {
 	}
 
 	if len(details) == 1 {
-		if e, ok := details[len(details)-1].(*errdetails.DebugInfo); ok {
+		if e, ok := details[len(details)-1].(*grpc_common_go.ErrorDetails); ok {
 			info := e
 			stackTrace := info.StackEntries
 			msg, code := getCodeFromGRPCMsg(info.Detail)
@@ -207,7 +197,7 @@ func ExtendedErrorFromDetail(details []interface{}) *ExtendedError {
 			}
 		}
 	} else {
-		if e, ok := details[len(details)-1].(*errdetails.DebugInfo); ok {
+		if e, ok := details[len(details)-1].(*grpc_common_go.ErrorDetails); ok {
 			info := e
 			stackTrace := info.StackEntries
 			msg, code := getCodeFromGRPCMsg(info.Detail)
