@@ -22,11 +22,6 @@ common := status.Errorf(codes.Aborted, "new error")
 err := NewInternalErrorFrom(common,"internal error")
 fmt.Println(err.StackTraceToString)
 ```
-## Integration with Code Climate
-
-This project is integrated with codeclimate
-
-[![Maintainability](https://api.codeclimate.com/v1/badges/d426ab46dd6c71fcb93b/maintainability)](https://codeclimate.com/repos/5fc8adcdd753d801b6015bf5/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/d426ab46dd6c71fcb93b/test_coverage)](https://codeclimate.com/repos/5fc8adcdd753d801b6015bf5/test_coverage)
 
 ## Integration with Github Actions
 
