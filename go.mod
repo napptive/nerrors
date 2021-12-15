@@ -1,6 +1,6 @@
 module github.com/napptive/nerrors
 
-go 1.15
+go 1.16
 
 require (
 	github.com/napptive/grpc-common-go v0.2.0
